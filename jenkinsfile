@@ -1,44 +1,53 @@
 pipeline {
     agent any
-	
+    
     environment {
+        // Ensure these IDs match exactly what is in your Jenkins Credentials Store
         GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-key')
-	GIT_TOKEN = credentials('git-token')
+        GIT_TOKEN = credentials('git-token')
     }
+    
     stages {
         stage('Git Checkout') {
             steps {
-               git "https://${GIT_TOKEN}@github.com/vishal-bulbule/gcp-tf.git"
+                // Using double quotes allows the ${GIT_TOKEN} variable to be injected
+                git url: "https://${GIT_TOKEN}@github.com/vishal-bulbule/gcp-tf.git", branch: "main"
             }
         }   
+
         stage('Terraform Init') {
             steps {
-                script {
-                    sh 'terraform init'
-                }
+                sh 'terraform init'
             }
         }
         
         stage('Terraform Plan') {
             steps {
-                script {
-                    sh 'terraform plan -out=tfplan'
-                }
+                sh 'terraform plan -out=tfplan'
             }
         }
 
-	    stage('Manual Approval') {
+        stage('Manual Approval') {
             steps {
-                input "Approve?"
+                // This was missing its closing brace
+                input message: 'Deploy to production?', 
+                      ok: 'Deploy',
+                      submitter: 'admin,deploy-team'
             }
         }
-	    
+        
         stage('Terraform Apply') {
             steps {
-                script {
-                    sh 'terraform apply tfplan'
-                }
+                // Added -auto-approve for automation stability
+                sh 'terraform apply -auto-approve tfplan'
             }
+        }
+    }
+    
+    post {
+        always {
+            // Good practice: Clean up the plan file and credentials after the run
+            sh 'rm -f tfplan'
         }
     }
 }
