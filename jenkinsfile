@@ -1,17 +1,16 @@
 pipeline {
-    agent any
-    
+    agent any  
     environment {
         // Ensure these IDs match exactly what is in your Jenkins Credentials Store
         GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-key')
         GIT_TOKEN = credentials('git-token')
     }
-    
+ 
     stages {
         stage('Git Checkout') {
             steps {
                 // Using double quotes allows the ${GIT_TOKEN} variable to be injected
-                git url: "https://${GIT_TOKEN}@github.com/vishal-bulbule/gcp-tf.git", branch: "main"
+                git url: "https://github.com/Aravindhleela/gcp-repo/edit/main/jenkinsfile", branch: "main"
             }
         }   
 
